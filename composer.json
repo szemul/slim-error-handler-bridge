@@ -4,10 +4,13 @@
     "license": "MIT",
     "minimum-stability": "stable",
     "require": {
+        "emulgeator/enum": "^1.0.0",
+        "nesbot/carbon": "^2.52.0",
         "php": "^8.0",
         "psr/http-server-middleware": "^1.0.1",
         "slim/slim": "^4.8",
-        "szemul/error-handler": "^v1.0.0"
+        "szemul/error-handler": "^v1.0.0",
+        "szemul/not-set-value": "^v1.0.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0.0",
