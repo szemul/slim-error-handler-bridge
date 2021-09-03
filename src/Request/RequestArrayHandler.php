@@ -14,34 +14,36 @@ use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterfa
 
 class RequestArrayHandler
 {
+    /** @param array<string,mixed> $array */
+    public function __construct(
+        protected array $array,
+        protected ?ParameterErrorCollectingInterface $errors,
+        protected string $errorKeyPrefix,
+    ) {
+    }
+
     protected function addError(
-        ?ParameterErrorCollectingInterface $errors,
         string $key,
         ParameterErrorReason $reason,
-        string $keyPrefix,
     ): void {
-        if (null === $errors) {
+        if (null === $this->errors) {
             return;
         }
 
-        $errors->addParameterError($keyPrefix . $key, $reason);
+        $this->errors->addParameterError($this->errorKeyPrefix . $key, $reason);
     }
 
-    /** @param array<string,mixed> $array */
     public function getSingleValueFromArray(
-        array $array,
         string $key,
         bool $isRequired,
         RequestValueType $type,
-        ?ParameterErrorCollectingInterface $errors = null,
-        string $errorKeyPrefix = '',
         callable $validationFunction = null,
         null|string|float|int|bool|NotSetValue $defaultValue = null,
     ): null|string|float|int|bool|NotSetValue {
-        $exists = array_key_exists($key, $array);
+        $exists = array_key_exists($key, $this->array);
 
         if ($isRequired && !$exists) {
-            $this->addError($errors, $key, ParameterErrorReason::createMissing(), $errorKeyPrefix);
+            $this->addError($key, ParameterErrorReason::createMissing());
 
             return null;
         }
@@ -50,10 +52,10 @@ class RequestArrayHandler
             return $this->getDefaultValue($type, func_num_args() < 8 ? new NotSetValue() : $defaultValue);
         }
 
-        $value = $this->getTypedValue($type, $array[$key]);
+        $value = $this->getTypedValue($type, $this->array[$key]);
 
         if (null !== $validationFunction && !$validationFunction($value)) {
-            $this->addError($errors, $key, ParameterErrorReason::createInvalid(), $errorKeyPrefix);
+            $this->addError($key, ParameterErrorReason::createInvalid());
 
             return null;
         }
@@ -62,27 +64,23 @@ class RequestArrayHandler
     }
 
     /**
-     * @param array<string,mixed>          $array
      * @param array<string|float|int|bool> $defaultValue
      *
-     * @return NotSetValue|array<string|float|int|bool>
+     * @return NotSetValue|string[]|float[]|int[]|bool[]
      */
     public function getArrayValueFromArray(
-        array $array,
         string $key,
         bool $isRequired,
         RequestValueType $elementType,
-        ?ParameterErrorCollectingInterface $errors = null,
-        string $errorKeyPrefix = '',
         callable $validationFunction = null,
         array $defaultValue = [],
     ): array|NotSetValue {
         $result = [];
 
-        $exists = array_key_exists($key, $array);
+        $exists = array_key_exists($key, $this->array);
 
         if ($isRequired && !$exists) {
-            $this->addError($errors, $key, ParameterErrorReason::createMissing(), $errorKeyPrefix);
+            $this->addError($key, ParameterErrorReason::createMissing());
 
             return $result;
         }
@@ -91,86 +89,74 @@ class RequestArrayHandler
             return func_num_args() < 8 ? new NotSetValue() : $defaultValue;
         }
 
-        if (!is_array($array[$key])) {
-            $this->addError($errors, $key, ParameterErrorReason::createInvalid(), $errorKeyPrefix);
+        if (!is_array($this->array[$key])) {
+            $this->addError($key, ParameterErrorReason::createInvalid());
 
             return $result;
         }
 
-        foreach ($array[$key] as $index => $value) {
+        foreach ($this->array[$key] as $index => $value) {
             $typedValue = $this->getTypedValue($elementType, $value);
 
             if (null !== $validationFunction && !$validationFunction($typedValue)) {
-                $this->addError($errors, $key, ParameterErrorReason::createInvalid(), $errorKeyPrefix);
+                $this->addError($key, ParameterErrorReason::createInvalid());
             }
 
-            $this->$key[$index] = $typedValue;
+            $result[$key[$index]] = $typedValue;
         }
 
         return $result;
     }
 
-    /** @param array<string,mixed> $array */
-    public function getDateFromArray(
-        array $array,
-        string $key,
-        bool $isRequired,
-        ?ParameterErrorCollectingInterface $errors = null,
-        string $errorKeyPrefix = '',
-        bool $allowMicroseconds = false,
-    ): ?CarbonInterface {
-        if (empty($array[$key]) && $isRequired) {
-            $this->addError($errors, $key, ParameterErrorReason::createMissing(), $errorKeyPrefix);
+    public function getDateFromArray(string $key, bool $isRequired, bool $allowMicroseconds = false): ?CarbonInterface
+    {
+        if (empty($this->array[$key]) && $isRequired) {
+            $this->addError($key, ParameterErrorReason::createMissing());
 
             return null;
         }
 
-        if (empty($array[$key])) {
+        if (empty($this->array[$key])) {
             return null;
         }
+
         try {
             try {
-                $date = CarbonImmutable::createFromFormat(CarbonInterface::ATOM, $array[$key])->setMicrosecond(0);
+                $date = CarbonImmutable::createFromFormat(CarbonInterface::ATOM, $this->array[$key])->setMicrosecond(0);
             } catch (InvalidFormatException $e) {
                 if (!$allowMicroseconds) {
                     throw $e;
                 }
-                $date = CarbonImmutable::createFromFormat('Y-m-d\TH:i:s.uP', $array[$key]);
+                $date = CarbonImmutable::createFromFormat('Y-m-d\TH:i:s.uP', $this->array[$key]);
             }
 
             $date->setTimezone('UTC');
+
             return $date;
-        } catch (InvalidArgumentException $e) {
-            $this->addError($errors, $key, ParameterErrorReason::createInvalid(), $errorKeyPrefix);
+        } catch (InvalidArgumentException) {
+            $this->addError($key, ParameterErrorReason::createInvalid());
         }
 
         return null;
     }
 
     /**
-     * @param array<string,mixed> $array
      * @param array<string|int>   $validValues
      */
-    public function getEnumFromArray(
-        array $array,
-        string $key,
-        array $validValues,
-        bool $isRequired,
-        ?ParameterErrorCollectingInterface $errors = null,
-        string $errorKeyPrefix = '',
-    ): null|string|int {
-        if (empty($array[$key]) && $isRequired) {
-            $this->addError($errors, $key, ParameterErrorReason::createMissing(), $errorKeyPrefix);
+    public function getEnumFromArray(string $key, array $validValues, bool $isRequired): null|string|int
+    {
+        if (empty($this->array[$key]) && $isRequired) {
+            $this->addError($key, ParameterErrorReason::createMissing());
 
             return null;
         }
 
-        if (!empty($array[$key])) {
-            if (in_array($array[$key], $validValues)) {
-                return $array[$key];
+        if (!empty($this->array[$key])) {
+            if (in_array($this->array[$key], $validValues)) {
+                return $this->array[$key];
             }
 
-            $this->addError($errors, $key, ParameterErrorReason::createInvalid(), $errorKeyPrefix);
+            $this->addError($key, ParameterErrorReason::createInvalid());
         }
 
         return null;
@@ -211,21 +197,12 @@ class RequestArrayHandler
      */
     protected function getTypedValue(RequestValueType $type, mixed $value): bool|int|float|string
     {
-        switch ((string)$type) {
-            case RequestValueType::TYPE_INT:
-                return (int)$value;
-
-            case RequestValueType::TYPE_FLOAT:
-                return (float)$value;
-
-            case RequestValueType::TYPE_STRING:
-                return (string)$value;
-
-            case RequestValueType::TYPE_BOOL:
-                return (bool)$value;
-
-            default:
-                throw new InvalidArgumentException('Invalid type given');
-        }
+        return match ((string)$type) {
+            RequestValueType::TYPE_INT    => (int)$value,
+            RequestValueType::TYPE_FLOAT  => (float)$value,
+            RequestValueType::TYPE_STRING => (string)$value,
+            RequestValueType::TYPE_BOOL   => (bool)$value,
+            default                       => throw new InvalidArgumentException('Invalid type given'),
+        };
     }
 }
