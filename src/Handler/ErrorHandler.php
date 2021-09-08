@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use Slim\Exception\HttpException;
 use Slim\Handlers\ErrorHandler as SlimErrorHandler;
 use Slim\Interfaces\CallableResolverInterface;
 use Szemul\ErrorHandler\ErrorHandlerRegistry;
@@ -30,7 +31,9 @@ class ErrorHandler extends SlimErrorHandler
         bool $logErrors,
         bool $logErrorDetails,
     ): ResponseInterface {
-        $this->errorHandlerRegistry->handleException($exception);
+        if (!($exception instanceof HttpException) || $exception->getCode() >= 500) {
+            $this->errorHandlerRegistry->handleException($exception);
+        }
 
         return parent::__invoke(
             $request,
