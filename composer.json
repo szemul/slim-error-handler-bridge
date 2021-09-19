@@ -9,7 +9,7 @@
         "php": "^8.0",
         "psr/http-server-middleware": "^1.0.1",
         "slim/slim": "^4.8",
-        "szemul/error-handler": "^v1.0.0",
+        "szemul/error-handler": "^v1.0.0|dev-main",
         "szemul/not-set-value": "^v1.0.0"
     },
     "require-dev": {
