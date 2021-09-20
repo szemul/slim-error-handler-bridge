@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 class NoopTest extends TestCase
 {
     // Temp test to make phpunit pass
-    function testNoop()
+    public function testNoop(): void
     {
         $this->assertTrue(true);
     }

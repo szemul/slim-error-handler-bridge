@@ -42,5 +42,4 @@ class ParameterErrorReason extends EnumAbstract
     {
         return static::createFromString(self::MUST_BE_EMPTY);
     }
-
 }

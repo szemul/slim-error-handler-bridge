@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Szemul\SlimErrorHandlerBridge\Exception;
 
-class HttpPaymentRequiredException
+use Slim\Exception\HttpSpecializedException;
+
+class HttpPaymentRequiredException extends HttpSpecializedException
 {
     /**
      * @var int
@@ -17,5 +19,4 @@ class HttpPaymentRequiredException
 
     protected $title       = '402 Payment required';
     protected $description = 'Payment is required to use this functionality.';
-
 }
