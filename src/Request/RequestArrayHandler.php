@@ -49,7 +49,7 @@ class RequestArrayHandler
         }
 
         if (!$exists) {
-            return $this->getDefaultValue($type, func_num_args() < 8 ? new NotSetValue() : $defaultValue);
+            return $this->getDefaultValue($type, func_num_args() < 5 ? new NotSetValue() : $defaultValue);
         }
 
         $value = $this->getTypedValue($type, $this->array[$key]);
@@ -86,7 +86,7 @@ class RequestArrayHandler
         }
 
         if (!$exists) {
-            return func_num_args() < 8 ? new NotSetValue() : $defaultValue;
+            return func_num_args() < 5 ? new NotSetValue() : $defaultValue;
         }
 
         if (!is_array($this->array[$key])) {
