@@ -21,6 +21,23 @@ class HttpUnprocessableEntityException extends HttpSpecializedException implemen
     /** @var array<string,ParameterErrorReason> */
     protected array $parameterErrors;
 
+    /**
+     * @return array<string,mixed>|null
+     */
+    public function __debugInfo(): ?array
+    {
+        return [
+            'code'            => $this->code,
+            'message'         => $this->message,
+            'title'           => $this->title,
+            'description'     => $this->description,
+            'parameterErrors' => $this->parameterErrors,
+            'file'            => $this->file,
+            'line'            => $this->line,
+            'request'         => '** Instance of ' . get_class($this->request),
+        ];
+    }
+
     public function addParameterError(string $name, ParameterErrorReason $errorReason): static
     {
         $this->parameterErrors[$name] = $errorReason;
