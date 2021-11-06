@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Szemul\SlimErrorHandlerBridge\Enum;
 
 use Emul\Enum\EnumAbstract;
+use JetBrains\PhpStorm\Immutable;
 
+#[Immutable]
 class RequestValueType extends EnumAbstract
 {
     public const TYPE_STRING = 'string';

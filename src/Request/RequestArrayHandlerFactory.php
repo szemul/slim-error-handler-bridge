@@ -8,7 +8,12 @@ use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterfa
 
 class RequestArrayHandlerFactory
 {
-    /** @param array<string|mixed> $data */
+
+    /**
+     * @param array<string|mixed> $data
+     *
+     * @codeCoverageIgnore
+     */
     #[Pure]
     public function getHandler(
         array $data,

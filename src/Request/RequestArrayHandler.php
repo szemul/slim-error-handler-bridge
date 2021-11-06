@@ -73,6 +73,7 @@ class RequestArrayHandler
         bool $isRequired,
         RequestValueType $elementType,
         callable $validationFunction = null,
+        callable $elementValidationFunction = null,
         array $defaultValue = [],
     ): array|NotSetValue {
         $result = [];
@@ -98,11 +99,18 @@ class RequestArrayHandler
         foreach ($this->array[$key] as $index => $value) {
             $typedValue = $this->getTypedValue($elementType, $value);
 
-            if (null !== $validationFunction && !$validationFunction($typedValue)) {
-                $this->addError($key, ParameterErrorReason::createInvalid());
+            if (null !== $elementValidationFunction && !$elementValidationFunction($typedValue)) {
+                $this->addError($key . '.' . $index, ParameterErrorReason::createInvalid());
+                continue;
             }
 
-            $result[$key[$index]] = $typedValue;
+            $result[$index] = $typedValue;
+        }
+
+        if (null !== $validationFunction && !$validationFunction($result)) {
+            $this->addError($key, ParameterErrorReason::createInvalid());
+
+            return [];
         }
 
         return $result;

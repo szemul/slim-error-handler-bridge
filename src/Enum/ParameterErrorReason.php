@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Szemul\SlimErrorHandlerBridge\Enum;
 
 use Emul\Enum\EnumAbstract;
+use JetBrains\PhpStorm\Immutable;
 
+#[Immutable]
 class ParameterErrorReason extends EnumAbstract
 {
     public const MISSING       = 'missing';

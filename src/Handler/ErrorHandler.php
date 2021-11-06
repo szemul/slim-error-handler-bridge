@@ -7,16 +7,16 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use Slim\Exception\HttpException;
 use Slim\Handlers\ErrorHandler as SlimErrorHandler;
 use Slim\Interfaces\CallableResolverInterface;
-use Szemul\ErrorHandler\ErrorHandlerRegistry;
+use Szemul\SlimErrorHandlerBridge\ThrowableForwarder\ForwarderInterface;
 use Throwable;
 
+/** @codeCoverageIgnore not much to test here */
 class ErrorHandler extends SlimErrorHandler
 {
     public function __construct(
-        protected ErrorHandlerRegistry $errorHandlerRegistry,
+        protected ForwarderInterface $forwarder,
         CallableResolverInterface $callableResolver,
         ResponseFactoryInterface $responseFactory,
         ?LoggerInterface $logger = null,
@@ -31,9 +31,7 @@ class ErrorHandler extends SlimErrorHandler
         bool $logErrors,
         bool $logErrorDetails,
     ): ResponseInterface {
-        if (!($exception instanceof HttpException) || $exception->getCode() >= 500) {
-            $this->errorHandlerRegistry->handleException($exception);
-        }
+        $this->forwarder->forward($exception);
 
         return parent::__invoke(
             $request,
