@@ -8,11 +8,10 @@ use PHPUnit\Framework\TestCase;
 
 abstract class EnumTestAbstract extends TestCase
 {
-
     /**
      * @dataProvider getCreateValues
      */
-    public function testCreate(string $methodName, string $expectedValue)
+    public function testCreate(string $methodName, string $expectedValue): void
     {
         /** @var EnumAbstract $sut */
         $sut = call_user_func($this->getTestClass() . '::' . $methodName);

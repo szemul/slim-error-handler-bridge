@@ -8,7 +8,6 @@ use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterfa
 
 class RequestArrayHandlerFactory
 {
-
     /**
      * @param array<string|mixed> $data
      *

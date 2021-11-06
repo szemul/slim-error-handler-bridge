@@ -7,7 +7,6 @@ use Szemul\SlimErrorHandlerBridge\Enum\RequestValueType;
 
 class RequestValueTypeTest extends EnumTestAbstract
 {
-
     public function getCreateValues(): array
     {
         return [
@@ -22,5 +21,4 @@ class RequestValueTypeTest extends EnumTestAbstract
     {
         return RequestValueType::class;
     }
-
 }
