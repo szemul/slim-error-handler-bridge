@@ -46,7 +46,7 @@ class RequestArrayHandlerTest extends TestCase
     {
         $sut = new RequestArrayHandler(self::ARRAY, null, '');
 
-        $this->assertNull($sut->getSingleValueFromArray('missing', true, RequestValueType::createString()));
+        $this->assertNull($sut->getSingleValueFromArray('missing', true, RequestValueType::TYPE_STRING));
     }
 
     public function testConvertNotSetValue(): void
@@ -58,20 +58,20 @@ class RequestArrayHandlerTest extends TestCase
 
     public function testGetSingleValueFromArrayWithNoErrors(): void
     {
-        $this->assertSame('foo', $this->sut->getSingleValueFromArray('string', true, RequestValueType::createString()));
-        $this->assertSame(123, $this->sut->getSingleValueFromArray('int', true, RequestValueType::createInt()));
-        $this->assertSame(123.123, $this->sut->getSingleValueFromArray('float', true, RequestValueType::createFloat()));
-        $this->assertSame(true, $this->sut->getSingleValueFromArray('bool', true, RequestValueType::createBool()));
+        $this->assertSame('foo', $this->sut->getSingleValueFromArray('string', true, RequestValueType::TYPE_STRING));
+        $this->assertSame(123, $this->sut->getSingleValueFromArray('int', true, RequestValueType::TYPE_INT));
+        $this->assertSame(123.123, $this->sut->getSingleValueFromArray('float', true, RequestValueType::TYPE_FLOAT));
+        $this->assertSame(true, $this->sut->getSingleValueFromArray('bool', true, RequestValueType::TYPE_BOOL));
 
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
     public function testGetSingleValueFromArrayWithTypeConversions(): void
     {
-        $this->assertSame(0, $this->sut->getSingleValueFromArray('string', true, RequestValueType::createInt()));
-        $this->assertSame(0.0, $this->sut->getSingleValueFromArray('string', true, RequestValueType::createFloat()));
-        $this->assertSame(true, $this->sut->getSingleValueFromArray('string', true, RequestValueType::createBool()));
-        $this->assertSame('123', $this->sut->getSingleValueFromArray('int', true, RequestValueType::createString()));
+        $this->assertSame(0, $this->sut->getSingleValueFromArray('string', true, RequestValueType::TYPE_INT));
+        $this->assertSame(0.0, $this->sut->getSingleValueFromArray('string', true, RequestValueType::TYPE_FLOAT));
+        $this->assertSame(true, $this->sut->getSingleValueFromArray('string', true, RequestValueType::TYPE_BOOL));
+        $this->assertSame('123', $this->sut->getSingleValueFromArray('int', true, RequestValueType::TYPE_STRING));
 
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
@@ -83,18 +83,18 @@ class RequestArrayHandlerTest extends TestCase
             $this->sut->getSingleValueFromArray(
                 'missing',
                 false,
-                RequestValueType::createString(),
+                RequestValueType::TYPE_STRING,
                 defaultValue: 'foo',
             ),
         );
 
         $this->assertNull(
-            $this->sut->getSingleValueFromArray('missing', false, RequestValueType::createString(), defaultValue: null),
+            $this->sut->getSingleValueFromArray('missing', false, RequestValueType::TYPE_STRING, defaultValue: null),
         );
 
         $this->assertEquals(
             new NotSetValue(),
-            $this->sut->getSingleValueFromArray('missing', false, RequestValueType::createString()),
+            $this->sut->getSingleValueFromArray('missing', false, RequestValueType::TYPE_STRING),
         );
 
         $this->assertFalse($this->errorCollector->hasParameterErrors());
@@ -109,12 +109,12 @@ class RequestArrayHandlerTest extends TestCase
         };
 
         $expectedErrors = [
-            self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING,
-            self::ERROR_KEY_PREFIX . 'string'  => ParameterErrorReason::INVALID,
+            self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING->value,
+            self::ERROR_KEY_PREFIX . 'string'  => ParameterErrorReason::INVALID->value,
         ];
 
-        $this->assertNull($this->sut->getSingleValueFromArray('missing', true, RequestValueType::createString()));
-        $this->assertNull($this->sut->getSingleValueFromArray('string', true, RequestValueType::createString(), $validation));
+        $this->assertNull($this->sut->getSingleValueFromArray('missing', true, RequestValueType::TYPE_STRING));
+        $this->assertNull($this->sut->getSingleValueFromArray('string', true, RequestValueType::TYPE_STRING, $validation));
 
         $this->assertCollectedErrorsMatch($expectedErrors);
     }
@@ -123,11 +123,11 @@ class RequestArrayHandlerTest extends TestCase
     {
         $this->assertSame(
             self::ARRAY['array'],
-            $this->sut->getArrayValueFromArray('array', true, RequestValueType::createString()),
+            $this->sut->getArrayValueFromArray('array', true, RequestValueType::TYPE_STRING),
         );
         $this->assertSame(
             ['foo' => 123],
-            $this->sut->getArrayValueFromArray('array', true, RequestValueType::createInt()),
+            $this->sut->getArrayValueFromArray('array', true, RequestValueType::TYPE_INT),
         );
 
         $this->assertFalse($this->errorCollector->hasParameterErrors());
@@ -137,20 +137,20 @@ class RequestArrayHandlerTest extends TestCase
     {
         $this->assertSame(
             [],
-            $this->sut->getArrayValueFromArray('missing', false, RequestValueType::createString(), defaultValue: []),
+            $this->sut->getArrayValueFromArray('missing', false, RequestValueType::TYPE_STRING, defaultValue: []),
         );
         $this->assertSame(
             ['foo' => 'bar'],
             $this->sut->getArrayValueFromArray(
                 'missing',
                 false,
-                RequestValueType::createString(),
+                RequestValueType::TYPE_STRING,
                 defaultValue: ['foo' => 'bar'],
             ),
         );
         $this->assertEquals(
             new NotSetValue(),
-            $this->sut->getArrayValueFromArray('missing', false, RequestValueType::createString()),
+            $this->sut->getArrayValueFromArray('missing', false, RequestValueType::TYPE_STRING),
         );
 
         $this->assertFalse($this->errorCollector->hasParameterErrors());
@@ -159,10 +159,10 @@ class RequestArrayHandlerTest extends TestCase
     public function testGetArrayValueFromArrayWithErrorHandling(): void
     {
         $expectedErrors = [
-            self::ERROR_KEY_PREFIX . 'missing'   => ParameterErrorReason::MISSING,
-            self::ERROR_KEY_PREFIX . 'string'    => ParameterErrorReason::INVALID,
-            self::ERROR_KEY_PREFIX . 'array'     => ParameterErrorReason::INVALID,
-            self::ERROR_KEY_PREFIX . 'array.foo' => ParameterErrorReason::INVALID,
+            self::ERROR_KEY_PREFIX . 'missing'   => ParameterErrorReason::MISSING->value,
+            self::ERROR_KEY_PREFIX . 'string'    => ParameterErrorReason::INVALID->value,
+            self::ERROR_KEY_PREFIX . 'array'     => ParameterErrorReason::INVALID->value,
+            self::ERROR_KEY_PREFIX . 'array.foo' => ParameterErrorReason::INVALID->value,
         ];
 
         $validation = function (array $value): bool {
@@ -179,22 +179,22 @@ class RequestArrayHandlerTest extends TestCase
 
         $this->assertSame(
             [],
-            $this->sut->getArrayValueFromArray('missing', true, RequestValueType::createString()),
+            $this->sut->getArrayValueFromArray('missing', true, RequestValueType::TYPE_STRING),
         );
         $this->assertSame(
             [],
-            $this->sut->getArrayValueFromArray('string', false, RequestValueType::createString()),
+            $this->sut->getArrayValueFromArray('string', false, RequestValueType::TYPE_STRING),
         );
         $this->assertSame(
             [],
-            $this->sut->getArrayValueFromArray('array', false, RequestValueType::createString(), $validation),
+            $this->sut->getArrayValueFromArray('array', false, RequestValueType::TYPE_STRING, $validation),
         );
         $this->assertSame(
             [],
             $this->sut->getArrayValueFromArray(
                 'array',
                 false,
-                RequestValueType::createString(),
+                RequestValueType::TYPE_STRING,
                 elementValidationFunction: $elementValidation,
             ),
         );
@@ -215,9 +215,9 @@ class RequestArrayHandlerTest extends TestCase
     public function testGetDateFromArrayWithErrorHandling(): void
     {
         $expectedErrors = [
-            self::ERROR_KEY_PREFIX . 'missing'   => ParameterErrorReason::MISSING,
-            self::ERROR_KEY_PREFIX . 'dateMicro' => ParameterErrorReason::INVALID,
-            self::ERROR_KEY_PREFIX . 'string'    => ParameterErrorReason::INVALID,
+            self::ERROR_KEY_PREFIX . 'missing'   => ParameterErrorReason::MISSING->value,
+            self::ERROR_KEY_PREFIX . 'dateMicro' => ParameterErrorReason::INVALID->value,
+            self::ERROR_KEY_PREFIX . 'string'    => ParameterErrorReason::INVALID->value,
         ];
 
         $this->assertNull($this->sut->getDateFromArray('missing', true));
@@ -238,8 +238,8 @@ class RequestArrayHandlerTest extends TestCase
     public function testGetEnumFromArrayWithErrorHandling(): void
     {
         $expectedErrors = [
-            self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING,
-            self::ERROR_KEY_PREFIX . 'string'  => ParameterErrorReason::INVALID,
+            self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING->value,
+            self::ERROR_KEY_PREFIX . 'string'  => ParameterErrorReason::INVALID->value,
         ];
 
         $this->assertNull($this->sut->getEnumFromArray('missing', ['foo', 'bar'], true));

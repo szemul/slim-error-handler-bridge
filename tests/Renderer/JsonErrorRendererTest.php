@@ -46,7 +46,7 @@ class JsonErrorRendererTest extends TestCase
         /** @var HttpUnprocessableEntityException|MockInterface $exception */
         $exception       = Mockery::mock(HttpUnprocessableEntityException::class)->makePartial();
         $parameterErrors = [
-            'test' => ParameterErrorReason::MUST_BE_EMPTY,
+            'test' => ParameterErrorReason::MUST_BE_EMPTY->value,
         ];
 
         //@phpstan-ignore-next-line

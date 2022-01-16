@@ -33,7 +33,7 @@ class HttpUnprocessableEntityExceptionTest extends TestCase
         $this->assertEmpty($sut->getParameterErrors());
         $this->assertFalse($sut->hasParameterErrors());
 
-        $duplicate = ParameterErrorReason::createDuplicate();
+        $duplicate = ParameterErrorReason::DUPLICATE;
         $sut->addParameterError('test', $duplicate);
 
         $this->assertTrue($sut->hasParameterErrors());

@@ -43,7 +43,7 @@ class RequestArrayHandler
         $exists = array_key_exists($key, $this->array);
 
         if ($isRequired && !$exists) {
-            $this->addError($key, ParameterErrorReason::createMissing());
+            $this->addError($key, ParameterErrorReason::MISSING);
 
             return null;
         }
@@ -55,7 +55,7 @@ class RequestArrayHandler
         $value = $this->getTypedValue($type, $this->array[$key]);
 
         if (null !== $validationFunction && !$validationFunction($value)) {
-            $this->addError($key, ParameterErrorReason::createInvalid());
+            $this->addError($key, ParameterErrorReason::INVALID);
 
             return null;
         }
@@ -81,7 +81,7 @@ class RequestArrayHandler
         $exists = array_key_exists($key, $this->array);
 
         if ($isRequired && !$exists) {
-            $this->addError($key, ParameterErrorReason::createMissing());
+            $this->addError($key, ParameterErrorReason::MISSING);
 
             return $result;
         }
@@ -91,7 +91,7 @@ class RequestArrayHandler
         }
 
         if (!is_array($this->array[$key])) {
-            $this->addError($key, ParameterErrorReason::createInvalid());
+            $this->addError($key, ParameterErrorReason::INVALID);
 
             return $result;
         }
@@ -100,7 +100,7 @@ class RequestArrayHandler
             $typedValue = $this->getTypedValue($elementType, $value);
 
             if (null !== $elementValidationFunction && !$elementValidationFunction($typedValue)) {
-                $this->addError($key . '.' . $index, ParameterErrorReason::createInvalid());
+                $this->addError($key . '.' . $index, ParameterErrorReason::INVALID);
                 continue;
             }
 
@@ -108,7 +108,7 @@ class RequestArrayHandler
         }
 
         if (null !== $validationFunction && !$validationFunction($result)) {
-            $this->addError($key, ParameterErrorReason::createInvalid());
+            $this->addError($key, ParameterErrorReason::INVALID);
 
             return [];
         }
@@ -119,7 +119,7 @@ class RequestArrayHandler
     public function getDateFromArray(string $key, bool $isRequired, bool $allowMicroseconds = false): ?CarbonInterface
     {
         if (empty($this->array[$key]) && $isRequired) {
-            $this->addError($key, ParameterErrorReason::createMissing());
+            $this->addError($key, ParameterErrorReason::MISSING);
 
             return null;
         }
@@ -142,7 +142,7 @@ class RequestArrayHandler
 
             return $date;
         } catch (InvalidArgumentException) {
-            $this->addError($key, ParameterErrorReason::createInvalid());
+            $this->addError($key, ParameterErrorReason::INVALID);
         }
 
         return null;
@@ -154,7 +154,7 @@ class RequestArrayHandler
     public function getEnumFromArray(string $key, array $validValues, bool $isRequired): null|string|int
     {
         if (empty($this->array[$key]) && $isRequired) {
-            $this->addError($key, ParameterErrorReason::createMissing());
+            $this->addError($key, ParameterErrorReason::MISSING);
 
             return null;
         }
@@ -164,7 +164,7 @@ class RequestArrayHandler
                 return $this->array[$key];
             }
 
-            $this->addError($key, ParameterErrorReason::createInvalid());
+            $this->addError($key, ParameterErrorReason::INVALID);
         }
 
         return null;
@@ -205,7 +205,7 @@ class RequestArrayHandler
      */
     protected function getTypedValue(RequestValueType $type, mixed $value): bool|int|float|string
     {
-        return match ((string)$type) {
+        return match ($type) {
             RequestValueType::TYPE_INT    => (int)$value,
             RequestValueType::TYPE_FLOAT  => (float)$value,
             RequestValueType::TYPE_STRING => (string)$value,
