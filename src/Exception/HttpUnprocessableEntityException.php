@@ -15,8 +15,8 @@ class HttpUnprocessableEntityException extends HttpSpecializedException implemen
     /** @var string */
     protected $message = 'Unprocessable entity.';
 
-    protected $title       = '422 Unprocessable entity';
-    protected $description = 'The server server understands the content type of the request entity, and the syntax of the request entity is correct, but it was unable to process the contained instructions.';
+    protected string $title       = '422 Unprocessable entity';
+    protected string $description = 'The server server understands the content type of the request entity, and the syntax of the request entity is correct, but it was unable to process the contained instructions.';
 
     /** @var array<string,ParameterErrorReason> */
     protected array $parameterErrors = [];

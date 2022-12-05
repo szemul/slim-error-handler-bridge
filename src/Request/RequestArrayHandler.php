@@ -179,7 +179,7 @@ class RequestArrayHandler
             $instance = CarbonImmutable::createFromFormat($format, $dateString);
 
             return $instance instanceof CarbonImmutable;
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException) { // @phpstan-ignore-line This exception can be thrown by carbon
             return false;
         }
     }

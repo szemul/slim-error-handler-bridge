@@ -37,6 +37,9 @@ class ErrorHandlerRegistryForwarderTest extends TestCase
     {
         $exception = new HttpBadRequestException($this->getServerRequest());
         $this->sut->forward($exception);
+
+        // Dummy assert
+        $this->assertTrue(true);
     }
 
     public function testForwardWithServerSideHttpException(): void

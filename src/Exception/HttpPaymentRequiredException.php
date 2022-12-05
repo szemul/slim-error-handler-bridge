@@ -17,6 +17,6 @@ class HttpPaymentRequiredException extends HttpSpecializedException
      */
     protected $message = 'Payment required.';
 
-    protected $title       = '402 Payment required';
-    protected $description = 'Payment is required to use this functionality.';
+    protected string $title       = '402 Payment required';
+    protected string $description = 'Payment is required to use this functionality.';
 }
