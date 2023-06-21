@@ -1,8 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Szemul\SlimErrorHandlerBridge\Request;
 
+use BackedEnum;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Carbon\Exceptions\InvalidFormatException;
@@ -11,6 +13,7 @@ use Szemul\NotSetValue\NotSetValue;
 use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Enum\RequestValueType;
 use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterface;
+use ValueError;
 
 class RequestArrayHandler
 {
@@ -22,18 +25,7 @@ class RequestArrayHandler
     ) {
     }
 
-    protected function addError(
-        string $key,
-        ParameterErrorReason $reason,
-    ): void {
-        if (null === $this->errors) {
-            return;
-        }
-
-        $this->errors->addParameterError($this->errorKeyPrefix . $key, $reason);
-    }
-
-    public function getSingleValueFromArray(
+    public function getSingleValue(
         string $key,
         bool $isRequired,
         RequestValueType $type,
@@ -68,7 +60,7 @@ class RequestArrayHandler
      *
      * @return NotSetValue|string[]|float[]|int[]|bool[]
      */
-    public function getArrayValueFromArray(
+    public function getArrayValue(
         string $key,
         bool $isRequired,
         RequestValueType $elementType,
@@ -116,7 +108,7 @@ class RequestArrayHandler
         return $result;
     }
 
-    public function getDateFromArray(string $key, bool $isRequired, bool $allowMicroseconds = false): ?CarbonInterface
+    public function getDate(string $key, bool $isRequired, bool $allowMicroseconds = false): ?CarbonInterface
     {
         if (empty($this->array[$key]) && $isRequired) {
             $this->addError($key, ParameterErrorReason::MISSING);
@@ -148,26 +140,25 @@ class RequestArrayHandler
         return null;
     }
 
-    /**
-     * @param array<string|int>   $validValues
-     */
-    public function getEnumFromArray(string $key, array $validValues, bool $isRequired): null|string|int
-    {
+    public function getEnum(
+        string $key,
+        string $enumClassName,
+        bool $isRequired,
+        ?NotSetValue $defaultValue = null,
+    ): BackedEnum|NotSetValue|null {
+        $result = func_num_args() < 4 ? new NotSetValue() : $defaultValue;
+
         if (empty($this->array[$key]) && $isRequired) {
             $this->addError($key, ParameterErrorReason::MISSING);
-
-            return null;
-        }
-
-        if (!empty($this->array[$key])) {
-            if (in_array($this->array[$key], $validValues)) {
-                return $this->array[$key];
+        } elseif (!empty($this->array[$key])) {
+            try {
+                $result = $enumClassName::from($this->array[$key]);
+            } catch (ValueError $valueError) {
+                $this->addError($key, ParameterErrorReason::INVALID);
             }
-
-            $this->addError($key, ParameterErrorReason::INVALID);
         }
 
-        return null;
+        return $result;
     }
 
     /**
@@ -212,5 +203,14 @@ class RequestArrayHandler
             RequestValueType::TYPE_BOOL   => (bool)$value,
             default                       => throw new InvalidArgumentException('Invalid type given'),
         };
+    }
+
+    protected function addError(string $key, ParameterErrorReason $reason): void
+    {
+        if (is_null($this->errors)) {
+            return;
+        }
+
+        $this->errors->addParameterError($this->errorKeyPrefix . $key, $reason);
     }
 }
