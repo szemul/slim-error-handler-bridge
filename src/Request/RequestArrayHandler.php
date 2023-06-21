@@ -32,7 +32,7 @@ class RequestArrayHandler
         callable $validationFunction = null,
         null|string|float|int|bool|NotSetValue $defaultValue = null,
     ): null|string|float|int|bool|NotSetValue {
-        $default   = $this->getDefaultValue($type, func_num_args() < 5 ? new NotSetValue() : $defaultValue);
+        $default   = $this->getDefaultValue($type, func_num_args() < 5 ? null : $defaultValue);
         $result    = $default;
 
         if (!array_key_exists($key, $this->array)) {
@@ -65,7 +65,7 @@ class RequestArrayHandler
         callable $elementValidationFunction = null,
         array $defaultValue = [],
     ): array|NotSetValue {
-        $result = func_num_args() < 5 ? new NotSetValue() : $defaultValue;
+        $result = func_num_args() < 5 ? [] : $defaultValue;
         $exists = array_key_exists($key, $this->array);
 
         if (!$exists) {
@@ -104,7 +104,7 @@ class RequestArrayHandler
         bool $allowMicroseconds = false,
         NotSetValue|CarbonInterface|null $defaultValue = null
     ): CarbonInterface|NotSetValue|null {
-        $result = func_num_args() < 3 ? new NotSetValue() : $defaultValue;
+        $result = func_num_args() < 3 ? null : $defaultValue;
 
         if (empty($this->array[$key])) {
             if ($isRequired) {
@@ -135,7 +135,7 @@ class RequestArrayHandler
         bool $isRequired,
         NotSetValue|CarbonInterface|null $defaultValue = null
     ): CarbonInterface|NotSetValue|null {
-        $result = func_num_args() < 3 ? new NotSetValue() : $defaultValue;
+        $result = func_num_args() < 3 ? null : $defaultValue;
 
         if (empty($this->array[$key])) {
             if ($isRequired) {
@@ -158,7 +158,7 @@ class RequestArrayHandler
         bool $isRequired,
         ?NotSetValue $defaultValue = null,
     ): BackedEnum|NotSetValue|null {
-        $result = func_num_args() < 4 ? new NotSetValue() : $defaultValue;
+        $result = func_num_args() < 4 ? null : $defaultValue;
 
         if (empty($this->array[$key]) && $isRequired) {
             $this->addError($key, ParameterErrorReason::MISSING);

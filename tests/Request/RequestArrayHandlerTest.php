@@ -36,7 +36,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getSingleValue('missing', true, RequestValueType::TYPE_STRING);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertNull($result);
     }
 
     /**
@@ -95,34 +95,37 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
-    public function testGetSingleValueWhenNotRequiredParamDoesNotExist_shouldReturnNotSetValue(): void
+    public function testGetSingleValueWhenNotRequiredParamDoesNotExist_shouldReturnNull(): void
     {
         $sut = $this->getSut([]);
 
         $result = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING);
 
-        $this->assertEquals(new NotSetValue(), $result);
-        $this->assertFalse($this->errorCollector->hasParameterErrors());
-    }
-
-    public function testGetSingleValueWhenNotRequiredParamDoesNotExistAndNullDefaultGiven_shouldReturnNull(): void
-    {
-        $sut = $this->getSut([]);
-
-        $result = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING, defaultValue: null);
-
         $this->assertNull($result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
-    public function testGetSingleValueWhenNotRequiredParamDoesNotExistAndDefaultGiven_shouldReturnDefault(): void
+    /**
+     * @return array<int, array<int, mixed>>
+     */
+    public function getSingleValueDefaultProvider(): array
     {
-        $sut     = $this->getSut([]);
-        $default = 'default';
+        return [
+            [new NotSetValue()],
+            ['default']
+        ];
+    }
 
-        $result = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING, defaultValue: $default);
+    /**
+     * @dataProvider getSingleValueDefaultProvider
+     */
+    public function testGetSingleValueWhenNotRequiredParamDoesNotExistAndDefaultGiven_shouldReturnDefault(mixed $defaultValue): void
+    {
+        $sut = $this->getSut([]);
 
-        $this->assertSame($default, $result);
+        $result  = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING, defaultValue: $defaultValue);
+
+        $this->assertSame($defaultValue, $result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
@@ -132,7 +135,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getSingleValue('missing', true, RequestValueType::TYPE_STRING);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertNull($result);
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING->value]);
     }
 
@@ -170,7 +173,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getArrayValue('missing', false, RequestValueType::TYPE_STRING);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertEquals([], $result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
@@ -247,7 +250,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getDateTime('missing', true);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertNull($result);
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING->value]);
     }
 
@@ -279,7 +282,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getDate('date', false);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertNull($result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
@@ -314,13 +317,14 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'date' => ParameterErrorReason::MISSING->value]);
     }
 
-    public function testGetEnumWhenNotPresentAndNotRequiredAndDefaultNullGiven_shouldReturnNull(): void
+    public function testGetEnumWhenNotPresentAndNotRequiredAndDefaultGiven_shouldReturnNull(): void
     {
         $sut = $this->getSut([]);
+        $default = new NotSetValue();
 
-        $result = $sut->getEnum('enum', EnumStub::class, false, null);
+        $result = $sut->getEnum('enum', EnumStub::class, false, $default);
 
-        $this->assertNull($result);
+        $this->assertSame($default, $result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
@@ -330,7 +334,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getEnum('enum', EnumStub::class, false);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertNull($result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
@@ -340,7 +344,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getEnum('enum', EnumStub::class, true);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertNull($result);
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'enum' => ParameterErrorReason::MISSING->value]);
     }
 
@@ -350,7 +354,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getEnum('enum', EnumStub::class, true);
 
-        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertNull($result);
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'enum' => ParameterErrorReason::INVALID->value]);
     }
 
