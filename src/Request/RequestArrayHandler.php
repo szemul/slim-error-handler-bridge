@@ -32,27 +32,24 @@ class RequestArrayHandler
         callable $validationFunction = null,
         null|string|float|int|bool|NotSetValue $defaultValue = null,
     ): null|string|float|int|bool|NotSetValue {
-        $exists = array_key_exists($key, $this->array);
+        $default   = $this->getDefaultValue($type, func_num_args() < 5 ? new NotSetValue() : $defaultValue);
+        $result    = $default;
 
-        if ($isRequired && !$exists) {
-            $this->addError($key, ParameterErrorReason::MISSING);
+        if (!array_key_exists($key, $this->array)) {
+            if ($isRequired) {
+                $this->addError($key, ParameterErrorReason::MISSING);
+            }
+        } else {
+            $result = $this->getTypedValue($type, $this->array[$key]);
 
-            return null;
+            if (!empty($validationFunction) && !$validationFunction($result)) {
+                $this->addError($key, ParameterErrorReason::INVALID);
+
+                $result = $default;
+            }
         }
 
-        if (!$exists) {
-            return $this->getDefaultValue($type, func_num_args() < 5 ? new NotSetValue() : $defaultValue);
-        }
-
-        $value = $this->getTypedValue($type, $this->array[$key]);
-
-        if (null !== $validationFunction && !$validationFunction($value)) {
-            $this->addError($key, ParameterErrorReason::INVALID);
-
-            return null;
-        }
-
-        return $value;
+        return $result;
     }
 
     /**
@@ -68,76 +65,91 @@ class RequestArrayHandler
         callable $elementValidationFunction = null,
         array $defaultValue = [],
     ): array|NotSetValue {
-        $result = [];
-
+        $result = func_num_args() < 5 ? new NotSetValue() : $defaultValue;
         $exists = array_key_exists($key, $this->array);
 
-        if ($isRequired && !$exists) {
-            $this->addError($key, ParameterErrorReason::MISSING);
-
-            return $result;
-        }
-
         if (!$exists) {
-            return func_num_args() < 5 ? new NotSetValue() : $defaultValue;
-        }
-
-        if (!is_array($this->array[$key])) {
+            if ($isRequired) {
+                $this->addError($key, ParameterErrorReason::MISSING);
+            }
+        } elseif (!is_array($this->array[$key])) {
             $this->addError($key, ParameterErrorReason::INVALID);
+        } else {
+            $result = [];
 
-            return $result;
-        }
+            foreach ($this->array[$key] as $index => $value) {
+                $typedValue = $this->getTypedValue($elementType, $value);
 
-        foreach ($this->array[$key] as $index => $value) {
-            $typedValue = $this->getTypedValue($elementType, $value);
+                if (null !== $elementValidationFunction && !$elementValidationFunction($typedValue)) {
+                    $this->addError($key . '.' . $index, ParameterErrorReason::INVALID);
+                    continue;
+                }
 
-            if (null !== $elementValidationFunction && !$elementValidationFunction($typedValue)) {
-                $this->addError($key . '.' . $index, ParameterErrorReason::INVALID);
-                continue;
+                $result[$index] = $typedValue;
             }
 
-            $result[$index] = $typedValue;
-        }
+            if (!empty($validationFunction) && !$validationFunction($result)) {
+                $this->addError($key, ParameterErrorReason::INVALID);
 
-        if (null !== $validationFunction && !$validationFunction($result)) {
-            $this->addError($key, ParameterErrorReason::INVALID);
-
-            return [];
+                $result = [];
+            }
         }
 
         return $result;
     }
 
-    public function getDate(string $key, bool $isRequired, bool $allowMicroseconds = false): ?CarbonInterface
-    {
-        if (empty($this->array[$key]) && $isRequired) {
-            $this->addError($key, ParameterErrorReason::MISSING);
-
-            return null;
-        }
+    public function getDateTime(
+        string $key,
+        bool $isRequired,
+        bool $allowMicroseconds = false,
+        NotSetValue|CarbonInterface|null $defaultValue = null
+    ): CarbonInterface|NotSetValue|null {
+        $result = func_num_args() < 3 ? new NotSetValue() : $defaultValue;
 
         if (empty($this->array[$key])) {
-            return null;
-        }
-
-        try {
-            try {
-                $date = CarbonImmutable::createFromFormat(CarbonInterface::ATOM, $this->array[$key])->setMicrosecond(0);
-            } catch (InvalidFormatException $e) {
-                if (!$allowMicroseconds) {
-                    throw $e;
-                }
-                $date = CarbonImmutable::createFromFormat('Y-m-d\TH:i:s.uP', $this->array[$key]);
+            if ($isRequired) {
+                $this->addError($key, ParameterErrorReason::MISSING);
             }
+        } else {
+            try {
+                try {
+                    $result = CarbonImmutable::createFromFormat(CarbonInterface::ATOM, $this->array[$key])->setMicrosecond(0);
+                } catch (InvalidFormatException $e) {
+                    if (!$allowMicroseconds) {
+                        throw $e;
+                    }
+                    $result = CarbonImmutable::createFromFormat('Y-m-d\TH:i:s.uP', $this->array[$key]);
+                }
 
-            $date->setTimezone('UTC');
-
-            return $date;
-        } catch (InvalidArgumentException) {
-            $this->addError($key, ParameterErrorReason::INVALID);
+                $result->setTimezone('UTC');
+            } catch (InvalidArgumentException) {
+                $this->addError($key, ParameterErrorReason::INVALID);
+            }
         }
 
-        return null;
+        return $result;
+    }
+
+    public function getDate(
+        string $key,
+        bool $isRequired,
+        NotSetValue|CarbonInterface|null $defaultValue = null
+    ): CarbonInterface|NotSetValue|null {
+        $result = func_num_args() < 3 ? new NotSetValue() : $defaultValue;
+
+        if (empty($this->array[$key])) {
+            if ($isRequired) {
+                $this->addError($key, ParameterErrorReason::MISSING);
+            }
+        } else {
+            try {
+                $result = CarbonImmutable::createFromFormat('Y-m-d', $this->array[$key])->setTimezone('UTC');
+            } catch (InvalidArgumentException) {
+                $this->addError($key, ParameterErrorReason::INVALID);
+            }
+        }
+
+        return $result;
     }
 
     public function getEnum(

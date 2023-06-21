@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Szemul\SlimErrorHandlerBridge\Test\Request;
 
+use Carbon\Carbon;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,7 +34,9 @@ class RequestArrayHandlerTest extends TestCase
     {
         $sut = new RequestArrayHandler([], null, '');
 
-        $this->assertNull($sut->getSingleValue('missing', true, RequestValueType::TYPE_STRING));
+        $result = $sut->getSingleValue('missing', true, RequestValueType::TYPE_STRING);
+
+        $this->assertEquals(new NotSetValue(), $result);
     }
 
     /**
@@ -129,7 +132,7 @@ class RequestArrayHandlerTest extends TestCase
 
         $result = $sut->getSingleValue('missing', true, RequestValueType::TYPE_STRING);
 
-        $this->assertNull($result);
+        $this->assertEquals(new NotSetValue(), $result);
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING->value]);
     }
 
@@ -143,7 +146,7 @@ class RequestArrayHandlerTest extends TestCase
             return false;
         };
 
-        $result = $sut->getSingleValue('invalid', true, RequestValueType::TYPE_STRING, $validationFunction);
+        $result = $sut->getSingleValue('invalid', true, RequestValueType::TYPE_STRING, $validationFunction, null);
 
         $this->assertNull($result);
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'invalid' => ParameterErrorReason::INVALID->value]);
@@ -216,44 +219,99 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertCollectedErrorsMatch(['test.array.foo' => ParameterErrorReason::INVALID->value]);
     }
 
-    public function testGetDate_shouldReturnProperCarbon(): void
+    public function testGetDateTime_shouldMapToCarbon(): void
     {
-        $date      = '2021-01-01T00:00:00Z';
-        $dateMicro = '2021-01-01T00:00:00.000000Z';
-        $data      = [
-            'date'      => $date,
-            'dateMicro' => $dateMicro,
-        ];
-        $sut       = $this->getSut($data);
+        $date = '2021-01-01T00:00:00Z';
+        $sut  = $this->getSut(['date' => $date]);
 
-        $this->assertSame($date, $sut->getDate('date', true)->toIso8601ZuluString());
-        $this->assertSame($date, $sut->getDate('date', true, true)->toIso8601ZuluString());
-        $this->assertSame($dateMicro, $sut->getDate('dateMicro', true, true)->toIso8601ZuluString('microsecond'));
-        $this->assertNull($sut->getDate('missing', false));
+        $result = $sut->getDateTime('date', true)->toIso8601ZuluString();
 
+        $this->assertSame($date, $result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
-    public function testGetDateWhenInvalidRequestGiven_shouldSetErrors(): void
+    public function testGetDateTimeWhenMicroSecondsGiven_shouldMapToCarbon(): void
     {
-        $data = [
-            'date'      => '2021-01-01T00:00:00Z',
-            'dateMicro' => '2021-01-01T00:00:00.000000Z',
-            'invalid'   => 'invalid',
-        ];
-        $sut  = $this->getSut($data);
+        $date = '2021-01-01T00:00:00.000000Z';
+        $sut  = $this->getSut(['date' => $date]);
 
-        $expectedErrors = [
-            self::ERROR_KEY_PREFIX . 'missing'   => ParameterErrorReason::MISSING->value,
-            self::ERROR_KEY_PREFIX . 'dateMicro' => ParameterErrorReason::INVALID->value,
-            self::ERROR_KEY_PREFIX . 'invalid'   => ParameterErrorReason::INVALID->value,
-        ];
+        $result = $sut->getDateTime('date', true, true);
 
-        $this->assertNull($sut->getDate('missing', true));
-        $this->assertNull($sut->getDate('dateMicro', false));
-        $this->assertNull($sut->getDate('invalid', false));
+        $this->assertSame($date, $result->toIso8601ZuluString('microsecond'));
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
 
-        $this->assertCollectedErrorsMatch($expectedErrors);
+    public function testGetDateTimeWhenRequiredButNotFound_shouldSetError(): void
+    {
+        $sut = $this->getSut([]);
+
+        $result = $sut->getDateTime('missing', true);
+
+        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'missing' => ParameterErrorReason::MISSING->value]);
+    }
+
+    public function testGetDateTimeWhenDefaultGiven_shouldReturnGivenDefault(): void
+    {
+        $default = Carbon::now();
+        $sut     = $this->getSut([]);
+
+        $result = $sut->getDateTime('missing', false, false, $default);
+
+        $this->assertSame($default, $result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
+    public function testGetDateWhenValidGiven_shouldReturnProperCarbon(): void
+    {
+        $date = '2021-01-01';
+        $sut  = $this->getSut(['date' => $date]);
+
+        $result = $sut->getDate('date', true)->toDateString();
+
+        $this->assertSame($date, $result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
+    public function testGetDateWhenNotPresentAndNotRequired_shouldReturnNotSetValue(): void
+    {
+        $sut = $this->getSut([]);
+
+        $result = $sut->getDate('date', false);
+
+        $this->assertEquals(new NotSetValue(), $result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
+    public function testGetDateWhenNotPresentAndNotRequiredAndDefaultGiven_shouldReturnGivenDefault(): void
+    {
+        $default = Carbon::now();
+        $sut     = $this->getSut([]);
+
+        $result = $sut->getDate('date', false, $default);
+
+        $this->assertSame($default, $result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
+    public function testGetDateWhenNotPresentAndNotRequiredAndNulDefaultGiven_shouldReturnGivenNull(): void
+    {
+        $sut = $this->getSut([]);
+
+        $result = $sut->getDate('date', false, null);
+
+        $this->assertNull($result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
+    public function testGetDateWhenNotPresentAndRequired_shouldSetError(): void
+    {
+        $sut = $this->getSut([]);
+
+        $result = $sut->getDate('date', true, null);
+
+        $this->assertNull($result);
+        $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'date' => ParameterErrorReason::MISSING->value]);
     }
 
     public function testGetEnumWhenNotPresentAndNotRequiredAndDefaultNullGiven_shouldReturnNull(): void
