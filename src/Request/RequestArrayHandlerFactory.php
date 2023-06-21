@@ -1,9 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Szemul\SlimErrorHandlerBridge\Request;
 
 use JetBrains\PhpStorm\Pure;
+use Szemul\NotSetValue\NotSetValue;
 use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterface;
 
 class RequestArrayHandlerFactory
@@ -18,7 +20,8 @@ class RequestArrayHandlerFactory
         array $data,
         ?ParameterErrorCollectingInterface $errors = null,
         string $errorKeyPrefix = '',
+        ?NotSetValue $defaultDefaultValue = null
     ): RequestArrayHandler {
-        return new RequestArrayHandler($data, $errors, $errorKeyPrefix);
+        return new RequestArrayHandler($data, $errors, $errorKeyPrefix, $defaultDefaultValue);
     }
 }

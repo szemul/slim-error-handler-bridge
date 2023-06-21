@@ -22,6 +22,7 @@ class RequestArrayHandler
         protected array $array,
         protected ?ParameterErrorCollectingInterface $errors,
         protected string $errorKeyPrefix,
+        protected ?NotSetValue $defaultDefaultValue = null
     ) {
     }
 
@@ -32,8 +33,8 @@ class RequestArrayHandler
         callable $validationFunction = null,
         null|string|float|int|bool|NotSetValue $defaultValue = null,
     ): null|string|float|int|bool|NotSetValue {
-        $default   = $this->getDefaultValue($type, func_num_args() < 5 ? null : $defaultValue);
-        $result    = $default;
+        $default = $this->getDefaultValue($type, func_num_args() < 5 ? $this->defaultDefaultValue : $defaultValue);
+        $result  = $default;
 
         if (!array_key_exists($key, $this->array)) {
             if ($isRequired) {
@@ -104,7 +105,7 @@ class RequestArrayHandler
         bool $allowMicroseconds = false,
         NotSetValue|CarbonInterface|null $defaultValue = null
     ): CarbonInterface|NotSetValue|null {
-        $result = func_num_args() < 3 ? null : $defaultValue;
+        $result = func_num_args() < 3 ? $this->defaultDefaultValue : $defaultValue;
 
         if (empty($this->array[$key])) {
             if ($isRequired) {
@@ -135,7 +136,7 @@ class RequestArrayHandler
         bool $isRequired,
         NotSetValue|CarbonInterface|null $defaultValue = null
     ): CarbonInterface|NotSetValue|null {
-        $result = func_num_args() < 3 ? null : $defaultValue;
+        $result = func_num_args() < 3 ? $this->defaultDefaultValue : $defaultValue;
 
         if (empty($this->array[$key])) {
             if ($isRequired) {
@@ -158,7 +159,7 @@ class RequestArrayHandler
         bool $isRequired,
         ?NotSetValue $defaultValue = null,
     ): BackedEnum|NotSetValue|null {
-        $result = func_num_args() < 4 ? null : $defaultValue;
+        $result = func_num_args() < 4 ? $this->defaultDefaultValue : $defaultValue;
 
         if (empty($this->array[$key]) && $isRequired) {
             $this->addError($key, ParameterErrorReason::MISSING);

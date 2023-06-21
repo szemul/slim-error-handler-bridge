@@ -105,6 +105,17 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
+    public function testGetSingleValueWhenNotSetValueGivenAsDefaultDefault_shouldReturnNotSetValue(): void
+    {
+        $notSetValue = new NotSetValue();
+        $sut = $this->getSut([], $notSetValue);
+
+        $result = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING);
+
+        $this->assertSame($notSetValue, $result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
     /**
      * @return array<int, array<int, mixed>>
      */
@@ -265,6 +276,17 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
+    public function testGetDateTimeWhenNotSetValueSetAsDefault_shouldReturnNotSetValue(): void
+    {
+        $notSetValue = new NotSetValue();
+        $sut     = $this->getSut([], $notSetValue);
+
+        $result = $sut->getDateTime('missing', false);
+
+        $this->assertSame($notSetValue, $result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
     public function testGetDateWhenValidGiven_shouldReturnProperCarbon(): void
     {
         $date = '2021-01-01';
@@ -276,7 +298,7 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
-    public function testGetDateWhenNotPresentAndNotRequired_shouldReturnNotSetValue(): void
+    public function testGetDateWhenNotPresentAndNotRequired_shouldReturnNull(): void
     {
         $sut = $this->getSut([]);
 
@@ -297,21 +319,21 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
-    public function testGetDateWhenNotPresentAndNotRequiredAndNulDefaultGiven_shouldReturnGivenNull(): void
+    public function testGetDateWhenNotSetValueGivenAsDefaultDefault_shouldReturnNotSetValue(): void
     {
-        $sut = $this->getSut([]);
+        $notSetValue = new NotSetValue();
+        $sut = $this->getSut([], $notSetValue);
 
-        $result = $sut->getDate('date', false, null);
+        $result = $sut->getDate('date', false);
 
-        $this->assertNull($result);
-        $this->assertFalse($this->errorCollector->hasParameterErrors());
+        $this->assertSame($notSetValue, $result);
     }
 
     public function testGetDateWhenNotPresentAndRequired_shouldSetError(): void
     {
         $sut = $this->getSut([]);
 
-        $result = $sut->getDate('date', true, null);
+        $result = $sut->getDate('date', true);
 
         $this->assertNull($result);
         $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'date' => ParameterErrorReason::MISSING->value]);
@@ -390,8 +412,8 @@ class RequestArrayHandlerTest extends TestCase
     /**
      * @param array<string, mixed> $data
      */
-    private function getSut(array $data): RequestArrayHandler
+    private function getSut(array $data, ?NotSetValue $defaultDefault = null): RequestArrayHandler
     {
-        return new RequestArrayHandler($data, $this->errorCollector, self::ERROR_KEY_PREFIX);
+        return new RequestArrayHandler($data, $this->errorCollector, self::ERROR_KEY_PREFIX, $defaultDefault);
     }
 }
