@@ -36,6 +36,9 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertNull($sut->getSingleValue('missing', true, RequestValueType::TYPE_STRING));
     }
 
+    /**
+     * @return array<int, array<int, mixed>>
+     */
     public function convertNotSetValueProvider(): array
     {
         return [
@@ -57,6 +60,9 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertSame($expectedResult, $result);
     }
 
+    /**
+     * @return array<int, array<int, mixed>>
+     */
     public function singleValueProvider(): array
     {
         $data = [
@@ -73,6 +79,7 @@ class RequestArrayHandlerTest extends TestCase
     }
 
     /**
+     * @param array<string, mixed> $data
      * @dataProvider singleValueProvider
      */
     public function testGetSingleValue_shouldConvertToDesiredType(array $data, mixed $expectedValue, string $parameterName, RequestValueType $type): void
@@ -175,7 +182,7 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 
-    public function testGetArrayValueWhenValidationFunctionGiven_shouldUseFunctionToValidateArray()
+    public function testGetArrayValueWhenValidationFunctionGiven_shouldUseFunctionToValidateArray(): void
     {
         $data               = [
             'array' => ['foo' => 'bar'],
@@ -192,7 +199,7 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertCollectedErrorsMatch(['test.array' => ParameterErrorReason::INVALID->value]);
     }
 
-    public function testGetArrayValueWhenElementValidationFunctionGiven_shouldUseFunctionToValidateElements()
+    public function testGetArrayValueWhenElementValidationFunctionGiven_shouldUseFunctionToValidateElements(): void
     {
         $data                      = [
             'array' => ['foo' => 'bar'],
@@ -318,6 +325,9 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertEquals($expected, json_decode(json_encode($this->errorCollector->getParameterErrors()), true));
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function getSut(array $data): RequestArrayHandler
     {
         return new RequestArrayHandler($data, $this->errorCollector, self::ERROR_KEY_PREFIX);
