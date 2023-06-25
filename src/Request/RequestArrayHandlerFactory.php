@@ -20,7 +20,7 @@ class RequestArrayHandlerFactory
         array $data,
         ?ParameterErrorCollectingInterface $errors = null,
         string $errorKeyPrefix = '',
-        ?NotSetValue $defaultDefaultValue = null
+        ?NotSetValue $defaultDefaultValue = null,
     ): RequestArrayHandler {
         return new RequestArrayHandler($data, $errors, $errorKeyPrefix, $defaultDefaultValue);
     }

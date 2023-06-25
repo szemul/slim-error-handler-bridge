@@ -108,7 +108,7 @@ class RequestArrayHandlerTest extends TestCase
     public function testGetSingleValueWhenNotSetValueGivenAsDefaultDefault_shouldReturnNotSetValue(): void
     {
         $notSetValue = new NotSetValue();
-        $sut = $this->getSut([], $notSetValue);
+        $sut         = $this->getSut([], $notSetValue);
 
         $result = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING);
 
@@ -123,7 +123,7 @@ class RequestArrayHandlerTest extends TestCase
     {
         return [
             [new NotSetValue()],
-            ['default']
+            ['default'],
         ];
     }
 
@@ -279,7 +279,7 @@ class RequestArrayHandlerTest extends TestCase
     public function testGetDateTimeWhenNotSetValueSetAsDefault_shouldReturnNotSetValue(): void
     {
         $notSetValue = new NotSetValue();
-        $sut     = $this->getSut([], $notSetValue);
+        $sut         = $this->getSut([], $notSetValue);
 
         $result = $sut->getDateTime('missing', false);
 
@@ -322,7 +322,7 @@ class RequestArrayHandlerTest extends TestCase
     public function testGetDateWhenNotSetValueGivenAsDefaultDefault_shouldReturnNotSetValue(): void
     {
         $notSetValue = new NotSetValue();
-        $sut = $this->getSut([], $notSetValue);
+        $sut         = $this->getSut([], $notSetValue);
 
         $result = $sut->getDate('date', false);
 
@@ -341,7 +341,7 @@ class RequestArrayHandlerTest extends TestCase
 
     public function testGetEnumWhenNotPresentAndNotRequiredAndDefaultGiven_shouldReturnNull(): void
     {
-        $sut = $this->getSut([]);
+        $sut     = $this->getSut([]);
         $default = new NotSetValue();
 
         $result = $sut->getEnum('enum', EnumStub::class, false, $default);

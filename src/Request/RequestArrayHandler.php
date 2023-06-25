@@ -22,7 +22,7 @@ class RequestArrayHandler
         protected array $array,
         protected ?ParameterErrorCollectingInterface $errors,
         protected string $errorKeyPrefix,
-        protected ?NotSetValue $defaultDefaultValue = null
+        protected ?NotSetValue $defaultDefaultValue = null,
     ) {
     }
 
@@ -103,7 +103,7 @@ class RequestArrayHandler
         string $key,
         bool $isRequired,
         bool $allowMicroseconds = false,
-        NotSetValue|CarbonInterface|null $defaultValue = null
+        NotSetValue|CarbonInterface|null $defaultValue = null,
     ): CarbonInterface|NotSetValue|null {
         $result = func_num_args() < 3 ? $this->defaultDefaultValue : $defaultValue;
 
@@ -134,7 +134,7 @@ class RequestArrayHandler
     public function getDate(
         string $key,
         bool $isRequired,
-        NotSetValue|CarbonInterface|null $defaultValue = null
+        NotSetValue|CarbonInterface|null $defaultValue = null,
     ): CarbonInterface|NotSetValue|null {
         $result = func_num_args() < 3 ? $this->defaultDefaultValue : $defaultValue;
 
