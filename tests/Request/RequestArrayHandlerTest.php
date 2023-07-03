@@ -391,7 +391,6 @@ class RequestArrayHandlerTest extends TestCase
         $this->assertSame($enum, $result);
     }
 
-
     public function testGetUuidWhenNotPresentAndNotRequiredAndDefaultGiven_shouldReturnDefault(): void
     {
         $sut     = $this->getSut([]);

@@ -16,7 +16,6 @@ use Szemul\NotSetValue\NotSetValue;
 use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Enum\RequestValueType;
 use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterface;
-use TypeError;
 use ValueError;
 
 class RequestArrayHandler
