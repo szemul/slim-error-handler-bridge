@@ -237,6 +237,7 @@ class RequestArrayHandler
             RequestValueType::TYPE_FLOAT  => (float)$value,
             RequestValueType::TYPE_STRING => (string)$value,
             RequestValueType::TYPE_BOOL   => (bool)$value,
+            //@phpstan-ignore-next-line
             default                       => throw new InvalidArgumentException('Invalid type given'),
         };
     }
