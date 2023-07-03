@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
+use Ramsey\Uuid\Uuid;
 use Szemul\NotSetValue\NotSetValue;
 use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Enum\RequestValueType;
@@ -388,6 +389,58 @@ class RequestArrayHandlerTest extends TestCase
         $result = $sut->getEnum('enum', EnumStub::class, true);
 
         $this->assertSame($enum, $result);
+    }
+
+
+    public function testGetUuidWhenNotPresentAndNotRequiredAndDefaultGiven_shouldReturnDefault(): void
+    {
+        $sut     = $this->getSut([]);
+        $default = new NotSetValue();
+
+        $result = $sut->getUuid('uuid', false, $default);
+
+        $this->assertSame($default, $result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
+    public function testGetUuidWhenNotPresentAndNotRequired_shouldReturnNull(): void
+    {
+        $sut = $this->getSut([]);
+
+        $result = $sut->getUuid('uuid', false);
+
+        $this->assertNull($result);
+        $this->assertFalse($this->errorCollector->hasParameterErrors());
+    }
+
+    public function testGetUuidWhenRequiredNotPresent_shouldReturnNullValueAndSetError(): void
+    {
+        $sut = $this->getSut([]);
+
+        $result = $sut->getUuid('uuid', true);
+
+        $this->assertNull($result);
+        $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'uuid' => ParameterErrorReason::MISSING->value]);
+    }
+
+    public function testGetUuidWhenInvalid_shouldReturnNotSetValueAndSetError(): void
+    {
+        $sut = $this->getSut(['uuid' => 'invalid']);
+
+        $result = $sut->getUuid('uuid', true);
+
+        $this->assertNull($result);
+        $this->assertCollectedErrorsMatch([self::ERROR_KEY_PREFIX . 'uuid' => ParameterErrorReason::INVALID->value]);
+    }
+
+    public function testGetUuid_shouldReturnUuidInterface(): void
+    {
+        $uuid = Uuid::uuid4();
+        $sut  = $this->getSut(['uuid' => $uuid->toString()]);
+
+        $result = $sut->getUuid('uuid', true);
+
+        $this->assertSame($uuid->toString(), $result->toString());
     }
 
     public function testValidateDateString(): void

@@ -9,10 +9,14 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Carbon\Exceptions\InvalidFormatException;
 use InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidUuidStringException;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use Szemul\NotSetValue\NotSetValue;
 use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Enum\RequestValueType;
 use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterface;
+use TypeError;
 use ValueError;
 
 class RequestArrayHandler
@@ -167,6 +171,26 @@ class RequestArrayHandler
             try {
                 $result = $enumClassName::from($this->array[$key]);
             } catch (ValueError $valueError) {
+                $this->addError($key, ParameterErrorReason::INVALID);
+            }
+        }
+
+        return $result;
+    }
+
+    public function getUuid(
+        string $key,
+        bool $isRequired,
+        ?NotSetValue $defaultValue = null,
+    ): UuidInterface|NotSetValue|null {
+        $result = func_num_args() < 3 ? $this->defaultDefaultValue : $defaultValue;
+
+        if (empty($this->array[$key]) && $isRequired) {
+            $this->addError($key, ParameterErrorReason::MISSING);
+        } elseif (!empty($this->array[$key])) {
+            try {
+                $result = Uuid::fromString($this->array[$key]);
+            } catch (InvalidUuidStringException $exception) {
                 $this->addError($key, ParameterErrorReason::INVALID);
             }
         }
