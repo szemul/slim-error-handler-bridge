@@ -9,6 +9,9 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Carbon\Exceptions\InvalidFormatException;
 use InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidUuidStringException;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use Szemul\NotSetValue\NotSetValue;
 use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Enum\RequestValueType;
@@ -19,6 +22,7 @@ class RequestArrayHandler
 {
     /** @param array<string,mixed> $array */
     public function __construct(
+        protected TypeHandler $typeHandler,
         protected array $array,
         protected ?ParameterErrorCollectingInterface $errors,
         protected string $errorKeyPrefix,
@@ -33,20 +37,31 @@ class RequestArrayHandler
         callable $validationFunction = null,
         null|string|float|int|bool|NotSetValue $defaultValue = null,
     ): null|string|float|int|bool|NotSetValue {
-        $default = $this->getDefaultValue($type, func_num_args() < 5 ? $this->defaultDefaultValue : $defaultValue);
-        $result  = $default;
+        $defaultValue = func_num_args() < 5 ? $this->defaultDefaultValue : $defaultValue;
+        $defaultValue = $this->typeHandler->getDefaultValue($type, $defaultValue);
+        $result       = $defaultValue;
 
         if (!array_key_exists($key, $this->array)) {
             if ($isRequired) {
                 $this->addError($key, ParameterErrorReason::MISSING);
             }
+        } elseif (is_array($this->array[$key])) {
+            $this->addError($key, ParameterErrorReason::INVALID);
+        } elseif ($type === RequestValueType::TYPE_INT && !$this->typeHandler->isInt($this->array[$key])) {
+            $this->addError($key, ParameterErrorReason::INVALID);
+        } elseif ($type === RequestValueType::TYPE_FLOAT && !$this->typeHandler->isFloat($this->array[$key])) {
+            $this->addError($key, ParameterErrorReason::INVALID);
+        } elseif ($type === RequestValueType::TYPE_STRING && !$this->typeHandler->isString($this->array[$key])) {
+            $this->addError($key, ParameterErrorReason::INVALID);
+        } elseif ($type === RequestValueType::TYPE_BOOL && !$this->typeHandler->isBoolean($this->array[$key])) {
+            $this->addError($key, ParameterErrorReason::INVALID);
         } else {
-            $result = $this->getTypedValue($type, $this->array[$key]);
+            $result = $this->typeHandler->getTypedValue($type, $this->array[$key]);
 
             if (!empty($validationFunction) && !$validationFunction($result)) {
                 $this->addError($key, ParameterErrorReason::INVALID);
 
-                $result = $default;
+                $result = $defaultValue;
             }
         }
 
@@ -79,7 +94,7 @@ class RequestArrayHandler
             $result = [];
 
             foreach ($this->array[$key] as $index => $value) {
-                $typedValue = $this->getTypedValue($elementType, $value);
+                $typedValue = $this->typeHandler->getTypedValue($elementType, $value);
 
                 if (null !== $elementValidationFunction && !$elementValidationFunction($typedValue)) {
                     $this->addError($key . '.' . $index, ParameterErrorReason::INVALID);
@@ -161,12 +176,32 @@ class RequestArrayHandler
     ): BackedEnum|NotSetValue|null {
         $result = func_num_args() < 4 ? $this->defaultDefaultValue : $defaultValue;
 
-        if (empty($this->array[$key]) && $isRequired) {
+        if (!array_key_exists($key, $this->array) && $isRequired) {
             $this->addError($key, ParameterErrorReason::MISSING);
-        } elseif (!empty($this->array[$key])) {
+        } elseif (array_key_exists($key, $this->array)) {
             try {
                 $result = $enumClassName::from($this->array[$key]);
             } catch (ValueError $valueError) {
+                $this->addError($key, ParameterErrorReason::INVALID);
+            }
+        }
+
+        return $result;
+    }
+
+    public function getUuid(
+        string $key,
+        bool $isRequired,
+        ?NotSetValue $defaultValue = null,
+    ): UuidInterface|NotSetValue|null {
+        $result = func_num_args() < 3 ? $this->defaultDefaultValue : $defaultValue;
+
+        if (!array_key_exists($key, $this->array) && $isRequired) {
+            $this->addError($key, ParameterErrorReason::MISSING);
+        } elseif (array_key_exists($key, $this->array)) {
+            try {
+                $result = Uuid::fromString($this->array[$key]);
+            } catch (InvalidUuidStringException $exception) {
                 $this->addError($key, ParameterErrorReason::INVALID);
             }
         }
@@ -188,34 +223,9 @@ class RequestArrayHandler
         }
     }
 
-    public function getDefaultValue(
-        RequestValueType $type,
-        null|string|float|int|bool|NotSetValue $defaultValue = null,
-    ): null|string|float|int|bool|NotSetValue {
-        if ($defaultValue instanceof NotSetValue) {
-            return $defaultValue;
-        }
-
-        return null === $defaultValue ? null : $this->getTypedValue($type, $defaultValue);
-    }
-
     public function convertNotSetValue(mixed $value, mixed $defaultValue = null): mixed
     {
         return $value instanceof NotSetValue ? $defaultValue : $value;
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    protected function getTypedValue(RequestValueType $type, mixed $value): bool|int|float|string
-    {
-        return match ($type) {
-            RequestValueType::TYPE_INT    => (int)$value,
-            RequestValueType::TYPE_FLOAT  => (float)$value,
-            RequestValueType::TYPE_STRING => (string)$value,
-            RequestValueType::TYPE_BOOL   => (bool)$value,
-            default                       => throw new InvalidArgumentException('Invalid type given'),
-        };
     }
 
     protected function addError(string $key, ParameterErrorReason $reason): void
