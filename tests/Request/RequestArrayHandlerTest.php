@@ -135,7 +135,7 @@ class RequestArrayHandlerTest extends TestCase
     {
         $sut = $this->getSut([]);
 
-        $result  = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING, defaultValue: $defaultValue);
+        $result = $sut->getSingleValue('missing', false, RequestValueType::TYPE_STRING, defaultValue: $defaultValue);
 
         $this->assertSame($defaultValue, $result);
         $this->assertFalse($this->errorCollector->hasParameterErrors());
@@ -170,8 +170,8 @@ class RequestArrayHandlerTest extends TestCase
     public function testGetArrayValueWhenIntTypeGiven_shouldCastElementsToInt(): void
     {
         $sut = $this->getSut([
-            'array' => ['foo' => '123bar'],
-        ]);
+                                 'array' => ['foo' => '123bar'],
+                             ]);
 
         $result = $sut->getArrayValue('array', true, RequestValueType::TYPE_INT);
 
@@ -293,9 +293,9 @@ class RequestArrayHandlerTest extends TestCase
         $date = '2021-01-01';
         $sut  = $this->getSut(['date' => $date]);
 
-        $result = $sut->getDate('date', true)->toDateString();
+        $result = $sut->getDate('date', true);
 
-        $this->assertSame($date, $result);
+        $this->assertSame('2021-01-01T00:00:00Z', $result->toIso8601ZuluString());
         $this->assertFalse($this->errorCollector->hasParameterErrors());
     }
 

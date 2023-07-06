@@ -147,7 +147,7 @@ class RequestArrayHandler
             }
         } else {
             try {
-                $result = CarbonImmutable::createFromFormat('Y-m-d', $this->array[$key])->setTimezone('UTC');
+                $result = CarbonImmutable::createFromFormat('Y-m-d', $this->array[$key])->setTimezone('UTC')->startOfDay();
             } catch (InvalidArgumentException) {
                 $this->addError($key, ParameterErrorReason::INVALID);
             }
