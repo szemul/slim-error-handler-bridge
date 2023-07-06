@@ -9,6 +9,9 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Carbon\Exceptions\InvalidFormatException;
 use InvalidArgumentException;
+use Ramsey\Uuid\Exception\InvalidUuidStringException;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use Szemul\NotSetValue\NotSetValue;
 use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Enum\RequestValueType;
@@ -174,6 +177,26 @@ class RequestArrayHandler
         return $result;
     }
 
+    public function getUuid(
+        string $key,
+        bool $isRequired,
+        ?NotSetValue $defaultValue = null,
+    ): UuidInterface|NotSetValue|null {
+        $result = func_num_args() < 3 ? $this->defaultDefaultValue : $defaultValue;
+
+        if (empty($this->array[$key]) && $isRequired) {
+            $this->addError($key, ParameterErrorReason::MISSING);
+        } elseif (!empty($this->array[$key])) {
+            try {
+                $result = Uuid::fromString($this->array[$key]);
+            } catch (InvalidUuidStringException $exception) {
+                $this->addError($key, ParameterErrorReason::INVALID);
+            }
+        }
+
+        return $result;
+    }
+
     /**
      * Returns TRUE if the specified date string is a valid date that matches the specified format
      */
@@ -214,6 +237,7 @@ class RequestArrayHandler
             RequestValueType::TYPE_FLOAT  => (float)$value,
             RequestValueType::TYPE_STRING => (string)$value,
             RequestValueType::TYPE_BOOL   => (bool)$value,
+            //@phpstan-ignore-next-line
             default                       => throw new InvalidArgumentException('Invalid type given'),
         };
     }
