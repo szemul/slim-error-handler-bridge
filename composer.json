@@ -4,16 +4,11 @@
     "license": "MIT",
     "minimum-stability": "stable",
     "require": {
-        "nesbot/carbon": "^2.52.0",
         "php": "^8.1",
-        "psr/http-server-middleware": "^1.0.1",
         "slim/slim": "^4.11",
         "szemul/bootstrap": "^1.0.0",
-        "szemul/config": "^1.0.1",
         "szemul/error-handler": "^v1.0.0|^2.0.0",
-        "szemul/not-set-value": "^v2.0.0",
         "szemul/request-parameter-error-collector": "^1.0.0",
-        "szemul/router": "^1.0.0",
         "szemul/slim-app-bootstrap": "^1.0.0"
     },
     "require-dev": {

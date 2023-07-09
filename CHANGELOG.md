@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2023-07-09
+
+### Added
+
+- `ErrorHandlingBootstrap`, moved from `szemul/framework`
+
+### Removed
+
+- Request handler, moved to `szemul/slim-request-handler`
+- Parameter error collector, moved to `szemul/request-parameter-error-collector`
+
+## [3.0.2] - 2023-07-06
+### Added
+- getDate now sets to the to start of the day
+
+
+## [3.0.1] - 2023-07-03
+### Added
+- Added `getUuid` to `RequestArrayHandler`
+
+
 ## [3.0.0] - 2023-06-21
 ### Changed
 - Renamed methods in `RequestArrayHandler`, removed `FromArray` from their names
@@ -14,6 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - The default value used in the getter methods of `RequestArrayHandler` can be set up in the constructor 
+
 
 ## [2.0.1] - 2022-12-05
 ### Fixed
