@@ -5,7 +5,7 @@ namespace Szemul\SlimErrorHandlerBridge\Test\Exception;
 
 use Mockery;
 use Psr\Http\Message\ServerRequestInterface;
-use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
+use Szemul\RequestParameterErrorCollector\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Exception\HttpUnprocessableEntityException;
 use PHPUnit\Framework\TestCase;
 

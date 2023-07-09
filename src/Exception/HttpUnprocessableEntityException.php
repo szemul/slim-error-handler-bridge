@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Szemul\SlimErrorHandlerBridge\Exception;
 
 use Slim\Exception\HttpSpecializedException;
-use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
-use Szemul\SlimErrorHandlerBridge\ParameterError\ParameterErrorCollectingInterface;
+use Szemul\RequestParameterErrorCollector\Enum\ParameterErrorReason;
+use Szemul\RequestParameterErrorCollector\ParameterErrorCollectingInterface;
 
 class HttpUnprocessableEntityException extends HttpSpecializedException implements ParameterErrorCollectingInterface
 {

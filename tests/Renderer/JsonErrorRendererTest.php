@@ -7,7 +7,7 @@ use Mockery;
 use Mockery\MockInterface;
 use RuntimeException;
 use Slim\Exception\HttpBadRequestException;
-use Szemul\SlimErrorHandlerBridge\Enum\ParameterErrorReason;
+use Szemul\RequestParameterErrorCollector\Enum\ParameterErrorReason;
 use Szemul\SlimErrorHandlerBridge\Exception\HttpUnprocessableEntityException;
 use Szemul\SlimErrorHandlerBridge\Renderer\JsonErrorRenderer;
 use PHPUnit\Framework\TestCase;

@@ -5,7 +5,7 @@ namespace Szemul\SlimErrorHandlerBridge\Renderer;
 
 use Slim\Error\AbstractErrorRenderer;
 use Slim\Exception\HttpSpecializedException;
-use Szemul\SlimErrorHandlerBridge\Exception\HttpUnprocessableEntityException;
+use Szemul\RequestParameterErrorCollector\ParameterErrorCollectingInterface;
 use Throwable;
 
 class JsonErrorRenderer extends AbstractErrorRenderer
@@ -24,7 +24,7 @@ class JsonErrorRenderer extends AbstractErrorRenderer
             $errorDetails = 'Unexpected condition encountered preventing server from fulfilling request.';
         }
 
-        if ($exception instanceof HttpUnprocessableEntityException) {
+        if ($exception instanceof ParameterErrorCollectingInterface) {
             $params = $exception->getParameterErrors();
         }
 
